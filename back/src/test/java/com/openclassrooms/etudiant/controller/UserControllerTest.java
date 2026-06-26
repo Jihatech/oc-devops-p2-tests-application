@@ -1,6 +1,7 @@
 package com.openclassrooms.etudiant.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.openclassrooms.etudiant.dto.LoginRequestDTO;
 import com.openclassrooms.etudiant.dto.RegisterDTO;
 import com.openclassrooms.etudiant.entities.User;
 import com.openclassrooms.etudiant.repository.UserRepository;
@@ -117,5 +118,41 @@ public class UserControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(MockMvcResultMatchers.status().isCreated());
+    }
+
+    @Test
+    public void loginSuccessful_returnsToken() throws Exception {
+        // GIVEN un utilisateur enregistre
+        User user = new User();
+        user.setFirstName(FIRST_NAME);
+        user.setLastName(LAST_NAME);
+        user.setLogin(LOGIN);
+        user.setPassword(PASSWORD);
+        userService.register(user);
+
+        LoginRequestDTO loginRequestDTO = new LoginRequestDTO();
+        loginRequestDTO.setLogin(LOGIN);
+        loginRequestDTO.setPassword(PASSWORD);
+
+        // WHEN / THEN : un token JWT non vide est retourne
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/login")
+                        .content(objectMapper.writeValueAsString(loginRequestDTO))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.emptyOrNullString())));
+    }
+
+    @Test
+    public void loginWithInvalidCredentials_isBadRequest() throws Exception {
+        LoginRequestDTO loginRequestDTO = new LoginRequestDTO();
+        loginRequestDTO.setLogin("ghost");
+        loginRequestDTO.setPassword("wrong-password");
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/login")
+                        .content(objectMapper.writeValueAsString(loginRequestDTO))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 }

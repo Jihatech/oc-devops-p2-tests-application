@@ -10,11 +10,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -98,6 +103,32 @@ class JwtAuthenticationFilterTest {
         filter.doFilterInternal(request, response, filterChain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void nullUsernameInToken_doesNotAuthenticate() throws Exception {
+        when(request.getHeader("Authorization")).thenReturn("Bearer x");
+        when(jwtService.extractUsername("x")).thenReturn(null);
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void alreadyAuthenticated_skipsReAuthentication() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("existing", null, List.of()));
+        when(request.getHeader("Authorization")).thenReturn("Bearer good");
+        when(jwtService.extractUsername("good")).thenReturn("john");
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        // L'authentification preexistante est conservee ; aucun rechargement utilisateur.
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo("existing");
+        verify(userDetailService, never()).loadUserByUsername(anyString());
         verify(filterChain).doFilter(request, response);
     }
 }

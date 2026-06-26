@@ -1,5 +1,6 @@
 package com.openclassrooms.etudiant.service;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.User;
@@ -7,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class JwtServiceTest {
 
@@ -32,5 +34,21 @@ public class JwtServiceTest {
     public void isTokenValid_true_for_matching_user() {
         String token = jwtService.generateToken(user);
         assertThat(jwtService.isTokenValid(token, user)).isTrue();
+    }
+
+    @Test
+    public void isTokenValid_false_whenUsernameDoesNotMatch() {
+        String token = jwtService.generateToken(user); // sujet = "john"
+        UserDetails other = User.builder().username("alice").password("x").build();
+        assertThat(jwtService.isTokenValid(token, other)).isFalse();
+    }
+
+    @Test
+    public void extractUsername_throws_whenTokenExpired() {
+        // Expiration negative => token deja expire des sa generation
+        ReflectionTestUtils.setField(jwtService, "expirationMs", -1000L);
+        String expired = jwtService.generateToken(user);
+        assertThatThrownBy(() -> jwtService.extractUsername(expired))
+                .isInstanceOf(ExpiredJwtException.class);
     }
 }

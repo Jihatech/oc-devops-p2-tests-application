@@ -2,6 +2,7 @@ package com.openclassrooms.etudiant.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.etudiant.dto.EtudiantDTO;
+import com.openclassrooms.etudiant.entities.Etudiant;
 import com.openclassrooms.etudiant.repository.EtudiantRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -87,5 +88,42 @@ public class EtudiantControllerTest {
     @WithMockUser
     void getById_notFound_is404() throws Exception {
         mockMvc.perform(get(URL + "/99999")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser
+    void getById_existing_isOk() throws Exception {
+        Etudiant saved = etudiantRepository.save(Etudiant.builder()
+                .firstName("Ada").lastName("Lovelace").email("ada@ex.com").classe("L3").build());
+
+        mockMvc.perform(get(URL + "/" + saved.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("ada@ex.com"));
+    }
+
+    @Test
+    @WithMockUser
+    void update_existing_isOk() throws Exception {
+        Etudiant saved = etudiantRepository.save(Etudiant.builder()
+                .firstName("Ada").lastName("Lovelace").email("ada@ex.com").classe("L3").build());
+
+        EtudiantDTO update = dto();
+        update.setClasse("M2");
+
+        mockMvc.perform(put(URL + "/" + saved.getId())
+                        .content(objectMapper.writeValueAsString(update))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.classe").value("M2"));
+    }
+
+    @Test
+    @WithMockUser
+    void delete_existing_isNoContent() throws Exception {
+        Etudiant saved = etudiantRepository.save(Etudiant.builder()
+                .firstName("Ada").lastName("Lovelace").email("ada@ex.com").classe("L3").build());
+
+        mockMvc.perform(delete(URL + "/" + saved.getId()))
+                .andExpect(status().isNoContent());
     }
 }
