@@ -72,4 +72,3 @@ git push -u origin main
 
 Nom du livrable à déposer sur OpenClassrooms : `Ilyasse_<Prenom>_1_repo_062026` (zip ou lien).
 
-> Je ne peux pas créer de compte GitHub ni pousser à ta place : ces deux étapes sont manuelles.
