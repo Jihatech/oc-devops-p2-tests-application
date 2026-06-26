@@ -1,0 +1,6 @@
+# Logs générés pendant le setup / l'exécution (non livrables)
+*.log
+
+# Fichiers système
+.DS_Store
+Thumbs.db
