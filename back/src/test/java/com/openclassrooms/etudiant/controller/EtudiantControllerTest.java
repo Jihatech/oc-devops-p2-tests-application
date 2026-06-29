@@ -31,7 +31,10 @@ public class EtudiantControllerTest {
     // MySQL 8.0 : compatible avec la configuration par defaut embarquee par Testcontainers
     // (le parametre innodb_log_file_size, injecte automatiquement, est supprime depuis MySQL 9.x).
     @Container
-    static MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:8.0");
+    static MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:8.0")
+            // Base de test jetable : pas de TLS (evite aussi toute fragilite liee a l'horloge du conteneur).
+            .withUrlParam("useSSL", "false")
+            .withUrlParam("allowPublicKeyRetrieval", "true");
 
     @Autowired private MockMvc mockMvc;
     @Autowired private EtudiantRepository etudiantRepository;
