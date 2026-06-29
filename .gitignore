@@ -1,6 +1,9 @@
 # Logs générés pendant le setup / l'exécution (non livrables)
 *.log
 
+# Captures/vidéos pour les slides (artefacts locaux, non versionnés)
+captures-slides/
+
 # Fichiers système
 .DS_Store
 Thumbs.db
